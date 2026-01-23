@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@import "./styles/tokens.css";
+@import "./styles/animations.css";
+@import "./styles/utilities.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: var(--lh-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    @apply text-(length:--fs-4xl) leading-(--lh-hero) font-extrabold tracking-tight scroll-m-20;
+  }
+
+  h2 {
+    @apply text-(length:--fs-3xl) leading-(--lh-heading) font-bold tracking-tight scroll-m-20 first:mt-0;
+  }
+
+  h3 {
+    @apply text-(length:--fs-2xl) leading-(--lh-heading) font-semibold tracking-tight scroll-m-20;
+  }
+
+  h4 {
+    @apply text-(length:--fs-xl) leading-(--lh-base) font-semibold tracking-tight;
+  }
+
+  small,
+  .text-sm {
+    @apply text-(length:--fs-sm) leading-(--lh-tight);
+  }
+
+  .scala-table-row {
+    @apply transition-colors hover:bg-muted/50 data-[state=selected]:bg-highlight;
+  }
+}

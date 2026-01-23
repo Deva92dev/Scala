@@ -1,36 +1,171 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+#### Debugger Prompt
 
-## Getting Started
+You are a senior systems debugger and incident responder.
 
-First, run the development server:
+Assume the problem is NOT simple and involves hidden framework assumptions,
+schema–runtime mismatches, or adapter contract violations.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Your job is to find the ROOT CAUSE, not to suggest random fixes.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+System context:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Language:
+- Framework:
+- ORM / DB:
+- Auth / External services:
+- Runtime environment:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Problem:
 
-## Learn More
+- Exact error message(s):
+- Exact moment it occurs (startup / login / callback / query / background):
+- Is it deterministic or intermittent:
 
-To learn more about Next.js, take a look at the following resources:
+What I already tried (chronological):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Do NOT repeat these unless you can prove they are wrong.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Rules you MUST follow:
 
-## Deploy on Vercel
+1. Assume implicit framework expectations exist.
+2. Do NOT guess or shotgun solutions.
+3. Identify exact type/shape mismatches.
+4. Explain WHY each hypothesis could cause the error.
+5. Eliminate hypotheses one-by-one.
+6. Prefer inspecting runtime values over modifying code.
+7. Stop once the root cause is identified.
+8. No refactors until the bug is fixed.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Debugging steps you MUST follow:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+STEP 1 — Classify the error  
+Classify it as one of:
+
+- type mismatch
+- serialization failure
+- adapter contract violation
+- lifecycle/order issue
+- state desynchronization
+  Explain why.
+
+STEP 2 — State the invariants  
+List what MUST be true for this system to work
+(e.g. “this must be a Date”, “this must be boolean”, “this row must exist”).
+
+STEP 3 — Inspect runtime reality  
+Show exact logging / inspection code to print:
+
+- typeof
+- instanceof
+- raw values
+  Explain what each inspection proves or disproves.
+
+STEP 4 — Compare contracts  
+Explicitly compare:
+
+- database schema
+- ORM schema
+- runtime object
+- framework expectations
+  Highlight mismatches.
+
+STEP 5 — Identify ONE root cause  
+Name the single root cause.
+If multiple exist, explain dependency order.
+
+STEP 6 — Minimal fix  
+Provide the smallest possible change that fixes it.
+Explain why it works.
+
+STEP 7 — Prevention  
+Explain what rule was violated and how to enforce it permanently
+(types, constraints, tests).
+
+Output requirements:
+
+- Direct and technical.
+- No fluff.
+- No “try this”.
+- Every claim must be justified.
+
+#### Schema Related
+
+## unique vs indexes
+
+❌ Don’t index columns that:
+Are rarely filtered
+Are frequently updated
+Have very low cardinality
+Are mostly used in inserts
+
+B-tree indexes can only be entered from their leftmost column.
+Index column order defines which questions are cheap to ask
+
+UNIQUE is an index, and fetches data at the same speed for the access paths it covers.
+Use UNIQUE to protect truth.
+Use INDEX to optimize access paths that truth doesn’t cover.
+
+Indexes optimize access; constraints protect truth
+This distinction is non-negotiable.
+
+Feature Index Unique constraint
+Speeds queries ✅ ✅
+Prevents duplicates ❌ ✅
+Enforces invariants ❌ ✅
+Creates an index — ✅
+Can lie about intent ✅ ❌
+
+When you were relying on indexes to imply uniqueness, you were trusting discipline instead of enforcement.
+Databases punish that assumption.
+
+The real rule (this is the one to remember)
+
+UNIQUE guarantees correctness.
+INDEX guarantees speed for a specific access pattern.
+UNIQUE already gives you an index — but only for its column order.
+
+So the correct design process is:
+Add UNIQUE constraints for invariants
+Observe query patterns
+Add indexes only when a query path is not covered
+
+Not the other way around.
+
+Every extra index:
+Slows inserts
+Slows updates
+Increases WAL writes
+Increases memory pressure
+Makes migrations slower
+Indexes are not free.
+
+# example
+
+cart_item
+
+You want:
+One product per cart → invariant
+Fast lookup by cart → query
+Correct setup:
+unique(cartId, productId) // correctness + cart lookups
+
+Do you also need:
+index(productId)
+Only if you run queries like:
+“Find all carts containing product X”
+Analytics / admin tools
+
+If not → don’t add it.
+
+# What “column order” actually means
+
+The index is sorted first by order_id,
+and only then by product_id within each order_id.
+That ordering is the entire point of column order means.
+
+(order_id = 1, product_id = 10)
+(order_id = 1, product_id = 15)
+(order_id = 1, product_id = 20)
+(order_id = 2, product_id = 5)
+(order_id = 2, product_id = 9)
+(order_id = 3, product_id = 1)
