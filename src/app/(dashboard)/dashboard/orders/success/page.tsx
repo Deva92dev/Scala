@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import DashboardGate from "@/components/dashboard/DashboardGate";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import Stripe from "stripe";
+import { requireAuthWithOrg } from "@/db/data-access/users";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-12-15.clover",
@@ -19,6 +18,8 @@ interface PageProps {
 }
 
 async function SuccessContent({ searchParams }: PageProps) {
+  await requireAuthWithOrg();
+
   const params = await searchParams;
   const paymentIntentId = params.payment_intent;
 
@@ -53,35 +54,35 @@ async function SuccessContent({ searchParams }: PageProps) {
   }
 
   return (
-    <DashboardGate>
-      {(ctx) => (
-        <div className="min-h-[80vh] flex flex-col items-center justify-center text-center p-4">
-          <div
-            className={`rounded-full p-4 mb-6 ${isSuccess ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
-          >
-            {isSuccess ? (
-              <CheckCircle2 className="w-12 h-12" />
-            ) : (
-              <Loader2 className="w-12 h-12" />
-            )}
-          </div>
-          <h1 className="text-3xl font-bold mb-2">{title}</h1>
-          <p className="text-muted-foreground max-w-md mb-8">{description}</p>
-          <div className="flex gap-4">
-            <Link href="/dashboard/orders">
-              <Button variant="outline">View Order History</Button>
-            </Link>
-            {isSuccess && (
-              <Link href="/dashboard/catalog">
-                <Button>
-                  Continue Shopping <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-    </DashboardGate>
+    <div className="min-h-[80vh] flex flex-col items-center justify-center text-center p-4">
+      <div
+        className={`rounded-full p-4 mb-6 ${
+          isSuccess ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+        }`}
+      >
+        {isSuccess ? (
+          <CheckCircle2 className="w-12 h-12" />
+        ) : (
+          <Loader2 className="w-12 h-12" />
+        )}
+      </div>
+
+      <h1 className="text-3xl font-bold mb-2">{title}</h1>
+      <p className="text-muted-foreground max-w-md mb-8">{description}</p>
+
+      <div className="flex gap-4">
+        <Link href="/dashboard/orders">
+          <Button variant="outline">View Order History</Button>
+        </Link>
+        {isSuccess && (
+          <Link href="/dashboard/catalog">
+            <Button>
+              Continue Shopping <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }
 

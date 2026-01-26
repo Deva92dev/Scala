@@ -3,6 +3,23 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ProductSkeleton } from "@/components/Skeletons/ProductSkeleton";
 import { ProductDetailsContent } from "@/components/catalog/ProductDetailsContent";
+import { db } from "@/db";
+import { desc } from "drizzle-orm";
+import { products } from "@/db/schema";
+
+export async function generateStaticParams() {
+  const topProducts = await db.query.products.findMany({
+    limit: 12,
+    columns: {
+      slug: true,
+    },
+    orderBy: [desc(products.createdAt)],
+  });
+
+  return topProducts.map((product) => ({
+    slug: product.slug,
+  }));
+}
 
 type PageProps = {
   params: Promise<{ slug: string }>;
