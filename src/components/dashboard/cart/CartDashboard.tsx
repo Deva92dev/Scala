@@ -1,7 +1,6 @@
 import CartItemRow from "@/components/dashboard/cart/CartItemRow";
 import { Button } from "@/components/ui/button";
 import { getCartDetails } from "@/db/data-access/cart";
-import { requireAuthWithOrg } from "@/db/data-access/users";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import ClearCartButton from "./ClearCartButton";
@@ -9,8 +8,12 @@ import { createOrderFromCart } from "@/db/actions/OrderActions";
 import { PriceTag } from "@/components/shared/PriceTagBasic";
 import PrintQuoteButton from "./PrintQuoteButton";
 
-const CartDashboard = async () => {
-  const { orgId, userId } = await requireAuthWithOrg();
+interface Props {
+  userId: string;
+  orgId: string;
+}
+
+const CartDashboard = async ({ orgId, userId }: Props) => {
   const cart = await getCartDetails(userId, orgId);
 
   const isEmpty = !cart || cart.items.length === 0;

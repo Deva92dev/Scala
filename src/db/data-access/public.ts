@@ -1,60 +1,60 @@
 import { db } from "..";
 import { members, products } from "../schema";
 import { desc, eq, and, ne, or, ilike } from "drizzle-orm";
-import { cache } from "react";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { safeGetSession } from "./session";
+import { cacheLife } from "next/cache";
+import { CATEGORY_KEYWORDS } from "@/lib/catalog-constants";
 
-export const getPublicCatalog = cache(
-  async (page: number = 1, limit: number = 12) => {
-    const offset = (page - 1) * limit;
+export const getPublicCatalog = async (
+  page: number = 1,
+  limit: number = 12,
+) => {
+  "use cache";
+  cacheLife("hours");
 
-    const data = await db.query.products.findMany({
-      where: eq(products.isArchived, false),
-      orderBy: [desc(products.createdAt)],
-      limit: limit,
-      offset: offset,
-      with: {
-        inventory: true, // Need this to calculate total stock
-      },
-    });
+  const offset = (page - 1) * limit;
 
-    // Transform for the UI
-    return data.map((p) => {
-      const totalStock = p.inventory.reduce((acc, i) => acc + i.stockOnHand, 0);
-      return {
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        description: p.description,
-        basePrice: Number(p.basePrice),
-        totalStock,
-        stockStatus:
-          totalStock === 0
-            ? "out_of_stock"
-            : totalStock < 10
-              ? "low_stock"
-              : "in_stock",
-        unitOfMeasure: p.unitOfMeasure,
-      };
-    });
-  },
-);
-
-export const getPublicSession = cache(async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
+  const data = await db.query.products.findMany({
+    where: eq(products.isArchived, false),
+    orderBy: [desc(products.createdAt)],
+    limit: limit,
+    offset: offset,
+    with: {
+      inventory: true, // Need this to calculate total stock
+    },
   });
+
+  // Transform for the UI
+  return data.map((p) => {
+    const totalStock = p.inventory.reduce((acc, i) => acc + i.stockOnHand, 0);
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      basePrice: Number(p.basePrice),
+      totalStock,
+      stockStatus:
+        totalStock === 0
+          ? "out_of_stock"
+          : totalStock < 10
+            ? "low_stock"
+            : "in_stock",
+      unitOfMeasure: p.unitOfMeasure,
+    };
+  });
+};
+
+export const getPublicSession = async () => {
+  const session = await safeGetSession();
   return session;
-});
+};
 
-export const getPublicCurrentUser = cache(async () => {
+export const getPublicCurrentUser = async () => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await safeGetSession();
 
-    if (!session) return null; // Return null, don't throw
+    if (!session) return null;
 
     const [membership] = await db
       .select({
@@ -70,33 +70,17 @@ export const getPublicCurrentUser = cache(async () => {
       orgId: membership?.orgId || null,
     };
   } catch (error) {
-    console.error("Auth Check Failed:", error);
+    // This catch block is now just for DB errors,
+    // since safeGetSession handles the auth errors silently.
+    console.error("Public User Check Failed:", error);
     return null;
   }
-});
-
-export const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  Electronics: ["Mouse", "Keyboard", "Computer", "Phone", "Monitor"],
-  Furniture: ["Chair", "Table", "Bed", "Sofa"],
-  Apparel: ["Shirt", "Pants", "Shoes", "Hat", "Gloves"],
-  Food: [
-    "Chicken",
-    "Fish",
-    "Tuna",
-    "Bacon",
-    "Sausages",
-    "Pizza",
-    "Salad",
-    "Cheese",
-    "Chips",
-  ],
-  Home: ["Soap", "Towels", "Ball"],
-  Transport: ["Bike", "Car"],
 };
 
-export const AVAILABLE_CATEGORIES = Object.keys(CATEGORY_KEYWORDS);
+export const getProductBySlug = async (slug: string) => {
+  "use cache";
+  cacheLife("hours");
 
-export const getProductBySlug = cache(async (slug: string) => {
   const product = await db.query.products.findFirst({
     where: and(eq(products.slug, slug), eq(products.isArchived, false)),
     with: {
@@ -134,41 +118,55 @@ export const getProductBySlug = cache(async (slug: string) => {
           : "in_stock",
     inferredCategory: category,
   };
-});
+};
 
-export const getRelatedProducts = cache(
-  async (currentProductId: string, category: string) => {
-    const keywords = CATEGORY_KEYWORDS[category] || [];
-    if (keywords.length === 0) return [];
+export const getRelatedProducts = async (
+  currentProductId: string,
+  category: string,
+) => {
+  "use cache";
+  cacheLife("days");
 
-    const related = await db.query.products.findMany({
-      where: and(
-        eq(products.isArchived, false),
-        // Used Number() because schema ID is number mode, but logic passed string ID
-        ne(products.id, Number(currentProductId)),
-        or(...keywords.map((k) => ilike(products.name, `%${k}%`))),
-      ),
-      limit: 4,
-      orderBy: [desc(products.createdAt)],
-      with: { inventory: true },
-    });
+  const keywords = CATEGORY_KEYWORDS[category] || [];
+  if (keywords.length === 0) return [];
 
-    return related.map((p) => {
-      const totalStock = p.inventory.reduce((acc, i) => acc + i.stockOnHand, 0);
-      return {
-        id: p.id.toString(),
-        name: p.name,
-        slug: p.slug,
-        description: p.description,
-        basePrice: Number(p.basePrice),
-        totalStock,
-        stockStatus:
-          totalStock === 0
-            ? "out_of_stock"
-            : totalStock < 10
-              ? "low_stock"
-              : "in_stock",
-      } as const;
-    });
-  },
-);
+  const related = await db.query.products.findMany({
+    where: and(
+      eq(products.isArchived, false),
+      // Used Number() because schema ID is number mode, but logic passed string ID
+      ne(products.id, Number(currentProductId)),
+      or(...keywords.map((k) => ilike(products.name, `%${k}%`))),
+    ),
+    limit: 4,
+    orderBy: [desc(products.createdAt)],
+    with: { inventory: true },
+  });
+
+  return related.map((p) => {
+    const totalStock = p.inventory.reduce((acc, i) => acc + i.stockOnHand, 0);
+    return {
+      id: p.id.toString(),
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      basePrice: Number(p.basePrice),
+      totalStock,
+      stockStatus:
+        totalStock === 0
+          ? "out_of_stock"
+          : totalStock < 10
+            ? "low_stock"
+            : "in_stock",
+    } as const;
+  });
+};
+
+export type PublicProductDTO = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  basePrice: number;
+  totalStock: number;
+  stockStatus: "in_stock" | "low_stock" | "out_of_stock";
+};

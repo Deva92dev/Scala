@@ -1,10 +1,14 @@
 import { and, count, desc, eq, ilike } from "drizzle-orm";
 import { products } from "../schema";
 import { db } from "..";
+import { cacheLife } from "next/cache";
 
 const PAGE_SIZE = 10;
 
 export const getPaginatedProducts = async (page: number, search?: string) => {
+  "use cache";
+  cacheLife("hours");
+
   const offset = (page - 1) * PAGE_SIZE;
 
   const whereClause = and(

@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { db } from "..";
 import { orders } from "../schema";
 import { and, eq, gte, lte } from "drizzle-orm";
@@ -5,8 +6,11 @@ import { and, eq, gte, lte } from "drizzle-orm";
 export async function getMonthlyStatement(
   orgId: string,
   month: number,
-  year: number
+  year: number,
 ) {
+  "use cache";
+  cacheLife("days");
+
   // Month is 0-indexed (0 = Jan), but args should be passed clearly
   const startOfMonth = new Date(year, month, 1);
   const endOfMonth = new Date(year, month + 1, 0);
@@ -20,7 +24,7 @@ export async function getMonthlyStatement(
       where: and(
         eq(orders.organizationId, orgId),
         gte(orders.createdAt, startOfMonth),
-        lte(orders.createdAt, endOfMonth)
+        lte(orders.createdAt, endOfMonth),
       ),
       orderBy: (orders, { desc }) => [desc(orders.createdAt)],
     }),
@@ -30,7 +34,7 @@ export async function getMonthlyStatement(
 
   const totalSpend = statementOrders.reduce(
     (sum, o) => sum + Number(o.totalAmount),
-    0
+    0,
   );
 
   return {

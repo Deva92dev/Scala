@@ -1,4 +1,4 @@
-import { PublicProductDTO } from "@/db/actions/public-catalog";
+import { PublicProductDTO } from "@/db/data-access/public";
 
 export type GridState = {
   products: PublicProductDTO[];

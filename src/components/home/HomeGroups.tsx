@@ -4,6 +4,8 @@ import { CatalogTeaser } from "@/components/home/CatalogTeaser";
 import { OnboardingRoadmap } from "@/components/home/OnboardingRoadmap";
 import { RiskReversalFAQ } from "@/components/home/RiskReversalFAQ";
 import { FinalCTA } from "@/components/home/FinalCTA";
+import { Suspense } from "react";
+import { CatalogSkeleton } from "../Skeletons/CatalogSkeleton";
 
 export function ValueAndDemoGroup() {
   return (
@@ -17,7 +19,9 @@ export function ValueAndDemoGroup() {
 export function CatalogAndRoadmapGroup() {
   return (
     <>
-      <CatalogTeaser />
+      <Suspense fallback={<CatalogSkeleton />}>
+        <CatalogTeaser />
+      </Suspense>
       <OnboardingRoadmap />
     </>
   );

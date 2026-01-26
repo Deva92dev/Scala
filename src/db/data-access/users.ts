@@ -1,10 +1,11 @@
+"use server";
+
 import { db } from "..";
 import { members } from "../schema";
 import { eq } from "drizzle-orm";
-import { cache } from "react";
 import { safeGetSession } from "./session";
 
-export const requireAuthWithOrg = cache(async () => {
+export const requireAuthWithOrg = async () => {
   const session = await safeGetSession();
 
   if (!session) throw new Error("UNAUTHENTICATED");
@@ -26,4 +27,4 @@ export const requireAuthWithOrg = cache(async () => {
     name: session.user.name,
     user: session.user,
   };
-});
+};

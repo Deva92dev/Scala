@@ -1,9 +1,12 @@
 import { db } from "@/db";
 import { organizations, users, members } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { cache } from "react";
+import { cacheLife } from "next/cache";
 
-export const getSettingsData = cache(async (userId: string, orgId: string) => {
+export const getSettingsData = async (userId: string, orgId: string) => {
+  "use cache";
+  cacheLife("hours");
+
   const userProfile = await db.query.users.findFirst({
     where: eq(users.id, userId),
   });
@@ -21,4 +24,4 @@ export const getSettingsData = cache(async (userId: string, orgId: string) => {
   });
 
   return { userProfile, orgProfile, teamMembers };
-});
+};

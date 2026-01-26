@@ -35,3 +35,11 @@ export interface OrderDetailsDTO extends Order {
     email: string;
   } | null;
 }
+
+export interface DashboardContext {
+  userId: string;
+  orgId: string;
+  name: string;
+  role: string;
+  cartCount: number;
+}

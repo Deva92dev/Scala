@@ -1,11 +1,11 @@
-import { connection } from "next/server";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Lock, ArrowRight, CheckCircle2, Unlock } from "lucide-react";
-import { getCatalogChunk } from "@/db/actions/public-catalog";
 import { getPublicCurrentUser } from "@/db/data-access/public";
 import { PriceTag } from "@/components/shared/PriceTagBasic";
+import { connection } from "next/server";
+import { getCatalogChunk } from "@/db/actions/publicActions";
 
 function getProductImage(productName: string) {
   const name = productName.toLowerCase();

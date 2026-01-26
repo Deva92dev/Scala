@@ -1,11 +1,7 @@
-import { headers } from "next/headers";
+"use server";
 import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-/**
- * A build-safe wrapper for getting the session.
- * during 'npm run build', headers() throws/rejects.
- * catch that and return null (logged out) to allow the build to finish.
- */
 export const safeGetSession = async () => {
   try {
     const headersList = await headers();
@@ -14,7 +10,6 @@ export const safeGetSession = async () => {
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    // This catches the "headers() rejects" error during static build
     return null;
   }
 };

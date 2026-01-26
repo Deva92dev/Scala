@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Lock, AlertTriangle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { PublicProductDTO } from "@/db/actions/public-catalog";
+import { PublicProductDTO } from "@/db/data-access/public";
 
 interface ProductCardProps {
   product: PublicProductDTO;

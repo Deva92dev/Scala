@@ -1,15 +1,19 @@
 import { getOrderById } from "@/db/data-access/order";
-import { requireAuthWithOrg } from "@/db/data-access/users";
 import { notFound } from "next/navigation";
 import { OrderDetailsView } from "./OrderDetailsView";
 
 interface OrderFetcherProps {
   params: Promise<{ id: string }>;
+  orgId: string;
+  role: string;
 }
 
-export async function OrderDetailsFetcher({ params }: OrderFetcherProps) {
+export async function OrderDetailsFetcher({
+  params,
+  orgId,
+  role,
+}: OrderFetcherProps) {
   const { id } = await params;
-  const { orgId, role } = await requireAuthWithOrg();
   const order = await getOrderById(id, orgId);
 
   if (!order) {

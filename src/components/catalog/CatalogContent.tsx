@@ -1,5 +1,5 @@
 import { ProductGrid } from "@/components/catalog/ProductGrid";
-import { getCatalogChunk } from "@/db/actions/public-catalog";
+import { getCatalogChunk } from "@/db/actions/publicActions";
 
 interface CatalogContentProps {
   searchParams: Promise<{ q?: string; category?: string }>;

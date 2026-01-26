@@ -3,10 +3,12 @@
 import { useEffect, useReducer } from "react";
 import { useInView } from "react-intersection-observer";
 import { ProductCard } from "./ProductCard";
-import { getCatalogChunk, PublicProductDTO } from "@/db/actions/public-catalog";
+
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { gridReducer } from "@/hooks/reducer/CatalogReducer";
+import { PublicProductDTO } from "@/db/data-access/public";
+import { getCatalogChunk } from "@/db/actions/publicActions";
 
 interface ProductGridProps {
   initialProducts: PublicProductDTO[];

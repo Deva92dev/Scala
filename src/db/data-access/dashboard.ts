@@ -1,8 +1,7 @@
 import { and, count, desc, eq, or } from "drizzle-orm";
 import { db } from "..";
 import { orders, organizations } from "../schema";
-import { cache } from "react";
-import { requireAuthWithOrg } from "./users";
+import { cacheLife } from "next/cache";
 
 export type FinancialSnapshot = {
   creditLimit: number;
@@ -21,35 +20,41 @@ export type RecentOrderDTO = {
   itemCount: number;
 };
 
-export const getOrganizationFinancial = cache(
-  async (orgId: string): Promise<FinancialSnapshot> => {
-    const org = await db.query.organizations.findFirst({
-      where: eq(organizations.id, orgId),
-      columns: {
-        creditLimit: true,
-        usedCredit: true,
-        currency: true,
-      },
-    });
+export const getOrganizationFinancial = async (
+  orgId: string,
+): Promise<FinancialSnapshot> => {
+  "use cache";
+  cacheLife("minutes");
 
-    if (!org) throw new Error("Organization not found");
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.id, orgId),
+    columns: {
+      creditLimit: true,
+      usedCredit: true,
+      currency: true,
+    },
+  });
 
-    const limit = Number(org.creditLimit);
-    const used = Number(org.usedCredit);
+  if (!org) throw new Error("Organization not found");
 
-    return {
-      creditLimit: limit,
-      usedCredit: used,
-      remainingCredit: limit - used,
-      currency: org.currency,
-      isOverLimit: used > limit,
-    };
-  },
-);
+  const limit = Number(org.creditLimit);
+  const used = Number(org.usedCredit);
+
+  return {
+    creditLimit: limit,
+    usedCredit: used,
+    remainingCredit: limit - used,
+    currency: org.currency,
+    isOverLimit: used > limit,
+  };
+};
 
 export const getRecentOrder = async (
   orgId: string,
 ): Promise<RecentOrderDTO[]> => {
+  "use cache";
+  cacheLife("minutes");
+
   const data = await db.query.orders.findMany({
     where: eq(orders.organizationId, orgId),
     orderBy: [desc(orders.createdAt)],
@@ -71,8 +76,9 @@ export const getRecentOrder = async (
   }));
 };
 
-export async function getDashboardStats() {
-  const { orgId } = await requireAuthWithOrg();
+export async function getDashboardStats(orgId: string) {
+  "use cache";
+  cacheLife("minutes");
 
   const [org, recentOrders, pendingCount, activeCount] = await Promise.all([
     // Financials

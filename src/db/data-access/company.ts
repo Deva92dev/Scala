@@ -1,8 +1,9 @@
+import { cacheLife } from "next/cache";
 import { db } from "..";
-import { requireAuthWithOrg } from "./users";
 
-export const getCompanyOverview = async () => {
-  const { orgId } = await requireAuthWithOrg();
+export const getCompanyOverview = async (orgId: string) => {
+  "use cache";
+  cacheLife("minutes");
 
   const org = await db.query.organizations.findFirst({
     where: (org, { eq }) => eq(org.id, orgId),

@@ -1,9 +1,12 @@
 import { db } from "@/db";
 import { organizations, orders } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { cache } from "react";
+import { cacheLife } from "next/cache";
 
-export const getBillingData = cache(async (orgId: string) => {
+export const getBillingData = async (orgId: string) => {
+  "use cache";
+  cacheLife("minutes");
+
   const org = await db.query.organizations.findFirst({
     where: eq(organizations.id, orgId),
     columns: {
@@ -32,4 +35,4 @@ export const getBillingData = cache(async (orgId: string) => {
   });
 
   return { org, recentInvoices };
-});
+};

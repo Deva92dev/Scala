@@ -1,9 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  getProductBySlug,
-  getRelatedProducts,
-  getPublicCurrentUser,
-} from "@/db/data-access/public";
+import { getProductBySlug, getRelatedProducts } from "@/db/data-access/public";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,6 +8,8 @@ import { CheckCircle2, ShieldCheck, Truck, Lock, Package } from "lucide-react";
 import { PriceTag } from "@/components/shared/PriceTagBasic";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/catalog/ProductCard";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 function getProductImage(productName: string) {
   const name = productName.toLowerCase();
@@ -31,19 +29,25 @@ function getProductImage(productName: string) {
 }
 
 interface Props {
-  slug: string;
+  paramsPromise: Promise<{ slug: string }>;
 }
 
-export async function ProductDetailsContent({ slug }: Props) {
+export async function ProductDetailsContent({ paramsPromise }: Props) {
+  const { slug } = await paramsPromise;
+
   const product = await getProductBySlug(slug);
   if (!product) return notFound();
 
-  const [user, relatedProducts] = await Promise.all([
-    getPublicCurrentUser(),
-    getRelatedProducts(product.id.toString(), product.inferredCategory),
-  ]);
+  const relatedProducts = await getRelatedProducts(
+    product.id.toString(),
+    product.inferredCategory,
+  );
 
-  const isAuthenticated = !!user;
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  const isAuthenticated = !!session?.user;
 
   return (
     <>

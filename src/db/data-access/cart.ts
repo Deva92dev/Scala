@@ -1,9 +1,12 @@
 import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "..";
 import { cartItems, carts } from "../schema";
-import { cache } from "react";
+import { cacheLife } from "next/cache";
 
-export const getCartDetails = cache(async (userId: string, orgId: string) => {
+export const getCartDetails = async (userId: string, orgId: string) => {
+  "use cache";
+  cacheLife("seconds");
+
   const cart = await db.query.carts.findFirst({
     where: (carts, { and, eq }) =>
       and(eq(carts.userId, userId), eq(carts.organizationId, orgId)),
@@ -24,9 +27,12 @@ export const getCartDetails = cache(async (userId: string, orgId: string) => {
   }, 0);
 
   return { ...cart, subtotal };
-});
+};
 
-export const getCartCount = cache(async (userId: string, orgId: string) => {
+export const getCartCount = async (userId: string, orgId: string) => {
+  "use cache";
+  cacheLife("seconds");
+
   const result = await db
     .select({ value: count() })
     .from(carts)
@@ -34,4 +40,4 @@ export const getCartCount = cache(async (userId: string, orgId: string) => {
     .where(and(eq(carts.userId, userId), eq(carts.organizationId, orgId)));
 
   return result[0]?.value || 0;
-});
+};

@@ -2,12 +2,15 @@ import { Separator } from "@/components/ui/separator";
 import CreditUsageCard from "./CreditUsageCard";
 import { TeamList } from "./TeamList";
 import StatementPrintButton from "./StatementPrintButton";
-import { requireAuthWithOrg } from "@/db/data-access/users";
 import { getCompanyOverview } from "@/db/data-access/company";
 
-export async function CompanyContent() {
-  const { userId } = await requireAuthWithOrg();
-  const org = await getCompanyOverview();
+interface Props {
+  userId: string;
+  orgId: string;
+}
+
+export async function CompanyContent({ orgId, userId }: Props) {
+  const org = await getCompanyOverview(orgId);
 
   // Transform DB data for the UI
   const teamMembers = org.members.map((m) => ({

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getDashboardStats } from "@/db/data-access/dashboard";
-import { requireAuthWithOrg } from "@/db/data-access/users";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PriceTag } from "@/components/shared/PriceTagBasic";
@@ -17,9 +16,12 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-export async function DashboardContent() {
-  const { name, orgId } = await requireAuthWithOrg();
+interface Props {
+  orgId: string;
+  name: string;
+}
 
+export async function DashboardContent({ orgId, name }: Props) {
   if (!orgId) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
@@ -35,7 +37,7 @@ export async function DashboardContent() {
     );
   }
 
-  const stats = await getDashboardStats();
+  const stats = await getDashboardStats(orgId);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
