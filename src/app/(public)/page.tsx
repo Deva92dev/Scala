@@ -4,9 +4,15 @@ import { TrustBar } from "@/components/home/TrustBar";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Wholesale Electronics Procurement",
+  title: "Scala B2B – Sourcing Simplified",
   description:
-    "Join 5,000+ businesses saving 18% on IT procurement. Apply for Net-60 terms and access Tier-1 pricing on Apple, Dell, and Lenovo.",
+    "Join 500+ enterprises using Scala B2B for effortless electronics sourcing. Exclusive wholesale rates on Laptops, Workstations, and Peripherals.",
+  openGraph: {
+    title: "Scala B2B – Sourcing Simplified",
+    description:
+      "Join 500+ enterprises using Scala B2B for effortless electronics sourcing. Sign up for exclusive wholesale rates.",
+    url: "/",
+  },
 };
 
 const ValueAndDemoGroup = dynamic(
