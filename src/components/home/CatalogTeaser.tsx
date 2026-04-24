@@ -7,24 +7,73 @@ import { PriceTag } from "@/components/shared/PriceTagBasic";
 import { connection } from "next/server";
 import { getCatalogChunk } from "@/db/actions/publicActions";
 
-function getProductImage(productName: string) {
+const AVAILABLE_ASSETS = [
+  "/images/products/laptop.png",
+  "/images/products/desktop.png",
+  "/images/products/monitor.png",
+  "/images/products/headphones.png",
+  "/images/products/smartphone.png",
+  "/images/products/tablet.png",
+];
+
+function getProductImage(productName: string, index: number) {
   const name = productName.toLowerCase();
+
+  // 1. Try to match the name specifically
   if (name.includes("laptop") || name.includes("macbook"))
-    return "/images/products/laptop.png";
-  if (name.includes("desktop")) return "/images/products/desktop.png";
-  if (name.includes("phone")) return "/images/products/phone.png";
-  return "/images/products/laptop.png";
+    return AVAILABLE_ASSETS[0];
+  if (name.includes("desktop")) return AVAILABLE_ASSETS[1];
+  if (
+    name.includes("monitor") ||
+    name.includes("display") ||
+    name.includes("screen")
+  )
+    return AVAILABLE_ASSETS[2];
+  if (
+    name.includes("headphone") ||
+    name.includes("audio") ||
+    name.includes("earbud")
+  )
+    return AVAILABLE_ASSETS[3];
+  if (
+    name.includes("phone") ||
+    name.includes("smartphone") ||
+    name.includes("iphone")
+  )
+    return AVAILABLE_ASSETS[4];
+  if (name.includes("tablet") || name.includes("ipad"))
+    return AVAILABLE_ASSETS[5];
+
+  return AVAILABLE_ASSETS[index % AVAILABLE_ASSETS.length];
 }
 
 export async function CatalogTeaser() {
   await connection();
 
-  const [products, user] = await Promise.all([
-    getCatalogChunk(1, 4, "", "Electronics"),
+  const [laptops, smartphones, monitors, headphones, user] = await Promise.all([
+    getCatalogChunk(1, 1, "laptop"),
+    getCatalogChunk(1, 1, "smartphone"),
+    getCatalogChunk(1, 1, "monitor"),
+    getCatalogChunk(1, 1, "headphone"),
     getPublicCurrentUser(),
   ]);
 
   const isAuthenticated = !!user;
+  const products = [...laptops, ...smartphones, ...monitors, ...headphones];
+
+  // FALLBACK: Fill the gaps with whatever is in the DB
+  if (products.length < 4) {
+    const fillAmount = 4 - products.length;
+    const fillers = await getCatalogChunk(1, fillAmount, "", "Electronics");
+
+    const existingIds = new Set(products.map((p) => p.id));
+
+    for (const p of fillers) {
+      if (!existingIds.has(p.id) && products.length < 4) {
+        products.push(p);
+      }
+    }
+  }
 
   return (
     <section className="py-24 bg-background border-y border-border">
@@ -36,8 +85,8 @@ export async function CatalogTeaser() {
               Unlock <span className="text-primary">Tier-1 Pricing</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              We protect our margins—and yours. Our wholesale pricing is
-              strictly hidden from the public to maintain brand value.
+              Wholesale pricing is strictly protected. Log in to view our
+              negotiated rates and real-time inventory.
             </p>
           </div>
           <Link href="/catalog" aria-label="View Full Catalog">
@@ -50,14 +99,14 @@ export async function CatalogTeaser() {
 
         {/* GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div
               key={product.id}
               className="group relative bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
             >
               <div className="relative h-48 bg-secondary/50 p-6 flex items-center justify-center">
                 <Image
-                  src={getProductImage(product.name)}
+                  src={getProductImage(product.name, index) || ""}
                   alt={product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
@@ -81,14 +130,12 @@ export async function CatalogTeaser() {
                 </div>
               </div>
 
-              {/* CONTENT */}
               <div className="p-5">
                 <h3 className="font-semibold text-lg leading-tight line-clamp-2 min-h-12 mb-4 text-card-foreground">
                   {product.name}
                 </h3>
 
                 <div className="space-y-3">
-                  {/* Retail Price */}
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Retail Price</span>
                     <span className="font-mono decoration-destructive decoration-2 line-through text-muted-foreground">
@@ -96,7 +143,6 @@ export async function CatalogTeaser() {
                     </span>
                   </div>
 
-                  {/* Tier Price */}
                   <div
                     className={`relative p-3 rounded-lg border border-dashed transition-colors duration-300 ${
                       isAuthenticated
@@ -106,11 +152,7 @@ export async function CatalogTeaser() {
                   >
                     <div className="flex justify-between items-center">
                       <span
-                        className={`text-xs font-bold uppercase ${
-                          isAuthenticated
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                        }`}
+                        className={`text-xs font-bold uppercase ${isAuthenticated ? "text-primary" : "text-muted-foreground"}`}
                       >
                         Gold Tier
                       </span>
@@ -124,7 +166,6 @@ export async function CatalogTeaser() {
                       )}
                     </div>
 
-                    {/* OVERLAY LOCK */}
                     {!isAuthenticated && (
                       <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
                         <Link
@@ -141,7 +182,6 @@ export async function CatalogTeaser() {
                   </div>
                 </div>
 
-                {/* Footer Info */}
                 <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
                   <span>Min Order: 5 Units</span>
                   {isAuthenticated ? (

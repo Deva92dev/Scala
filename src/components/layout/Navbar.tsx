@@ -19,7 +19,7 @@ export function Navbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center space-x-2">
             <span className="font-bold text-xl tracking-tight">
-              TechCorp<span className="text-primary">.</span>
+              Scala B2B<span className="text-primary">.</span>
             </span>
           </Link>
           <Suspense

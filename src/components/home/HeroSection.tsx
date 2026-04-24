@@ -82,14 +82,17 @@ export function HeroSection() {
 
           {/* 3D Tilt Container */}
           <div className="relative rounded-xl border border-border bg-card/50 backdrop-blur-sm p-2 shadow-2xl lg:rounded-2xl lg:p-4 transform transition-transform hover:scale-[1.01] hover:-rotate-x-1 duration-700 ease-out origin-bottom">
-            <Image
-              src="/images/dashboard-preview.png"
-              alt="TechCorp Procurement Dashboard Interface"
-              width={1200}
-              height={600}
-              className="rounded-lg border shadow-sm w-full h-auto"
-              preload={true}
-            />
+            <div className="relative w-full rounded-lg overflow-hidden border shadow-sm">
+              <Image
+                src="/images/Hero Two.png"
+                alt="TechCorp Procurement Dashboard Interface"
+                width={1920}
+                height={1080}
+                className="w-full h-auto"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+                priority
+              />
+            </div>
 
             {/* Floating Badge */}
             <div className="absolute -right-6 top-12 hidden lg:block bg-card border border-border p-4 rounded-xl shadow-2xl animate-bounce delay-1000 backdrop-blur-md">
