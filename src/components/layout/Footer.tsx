@@ -14,7 +14,7 @@ export function Footer() {
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <span className="font-bold text-xl tracking-tight text-foreground">
-                ScalaB2B<span className="text-primary">.</span>
+                Scala B2B<span className="text-primary">.</span>
               </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs mb-6">
@@ -169,7 +169,7 @@ export function Footer() {
 
         {/* BOTTOM BAR */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-          <p>&copy; {currentYear} ScalaB2B. All rights reserved.</p>
+          <p>&copy; {currentYear} Scala B2B. All rights reserved.</p>
           <div className="flex gap-6">
             <span>Secure Payment:</span>
             <div className="flex gap-3 grayscale hover:grayscale-0 transition-all">
